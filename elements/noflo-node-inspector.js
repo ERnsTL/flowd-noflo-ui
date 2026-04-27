@@ -122,7 +122,7 @@ Polymer({
         height: 36px;
         border: none;
         font-family: "SourceCodePro",Helvetica,Arial,sans-serif;
-        font-size: 10px;
+        font-size: 12px;  /* IIP text entry field */
         padding: 9px 26px 9px 36px;
         margin: 0px;
       }
@@ -324,8 +324,8 @@ Polymer({
         justify-content: space-between;
       }
       section.errors header h2 {
-        font-size: 10px;
-        font-weight: normal;
+        font-size: 12px;
+        padding: 9px 26px 9px 36px;
         line-height: 36px;
         margin-bottom: 0px;
         padding-bottom: 0px;
