@@ -95,6 +95,17 @@ const handleSignal = (s, rtId, output) => {
         },
       });
       break;
+    case 'network:debug':
+      output.send({
+        status: {
+          status: {
+            graph: signal.payload.graph,
+            debug: signal.payload.enable,
+          },
+          runtime: rtId,
+        },
+      });
+      return;
     default:
       // Unknown signal. Error?
   }

@@ -1,7 +1,7 @@
-const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const WebpackPwaManifest = require('webpack-pwa-manifest');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const { GenerateSW: GenerateServiceWorker } = require('workbox-webpack-plugin');
 const { EnvironmentPlugin } = require('webpack');
 const path = require('path');
@@ -25,7 +25,7 @@ module.exports = {
     },
     runtimeChunk: 'single',
   },
-  mode: 'production',
+  mode: 'development',
   devtool: 'source-map',
   module: {
     rules: [
@@ -119,6 +119,7 @@ module.exports = {
   },
   externals: {
     canvas: 'commonjs canvas', // Required by noflo-image
+    wrtc: 'commonjs wrtc',
   },
   resolve: {
     extensions: ['.coffee', '.js', '.jsx'],
@@ -221,6 +222,7 @@ module.exports = {
   node: {
     child_process: 'empty',
     fs: 'empty',
+    wrtc: 'empty',
   },
   devServer: {
     contentBase: path.resolve(__dirname, './browser'),

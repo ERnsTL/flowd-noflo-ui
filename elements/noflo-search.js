@@ -553,6 +553,9 @@ Polymer({
     this.graphInspector.addEventListener('specschanged', (ev) => {
       this.fire('specschanged', ev.detail);
     });
+    this.graphInspector.addEventListener('debugchanged', (ev) => {
+      this.fire('debugchanged', ev.detail);
+    });
     PolymerDom(document.body).appendChild(this.graphInspector);
   },
 

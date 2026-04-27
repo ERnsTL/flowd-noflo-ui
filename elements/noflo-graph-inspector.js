@@ -140,10 +140,14 @@ Polymer({
         Icon
         <noflo-icon-selector selected="{{icon}}"></noflo-icon-selector>
       </label>
-      <label>
-        <span>Type</span>
-        <noflo-type-selector type="{{type}}" runtimes="{{runtimes}}"></noflo-type-selector>
-      </label>
+       <label>
+         <span>Type</span>
+         <noflo-type-selector type="{{type}}" runtimes="{{runtimes}}"></noflo-type-selector>
+       </label>
+       <label>
+         <input type="checkbox" checked="[[debug]]" on-change="onDebugToggle" />
+         <span>Debug mode</span>
+       </label>
       </div>
       <div class\$="{{_computeClass3(view)}}">
       <label id="html_editor">
@@ -216,6 +220,10 @@ Polymer({
       type: String,
       value: '',
     },
+    debug: {
+      type: Boolean,
+      value: false,
+    },
     view: {
       type: String,
       value: 'properties',
@@ -236,6 +244,7 @@ Polymer({
   },
 
   attached() {
+    // Add blur class to focus attention on the modal
     PolymerDom(document.getElementById('container')).classList.add('blur');
     PolymerDom(this).classList.add('modal-content');
     if (!this.graph) {
@@ -243,6 +252,10 @@ Polymer({
     }
     this.description = this.graph.properties.description;
     this.icon = this.graph.properties.icon || 'cog';
+    // Set debug without triggering observer during initialization
+    this._initializing = true;
+    this.set('debug', this.graph.properties.debug || false);
+    this._initializing = false;
     this.type = runtime.getGraphType(this.graph);
     this.view = 'properties';
     this.inGraph = [];
@@ -338,6 +351,20 @@ Polymer({
     this.testsEditor.setOption('theme', this.getMirrorTheme());
   },
 
+  onDebugToggle(event) {
+    // Don't fire event during initialization
+    if (this._initializing) {
+      return;
+    }
+    const enabled = !!(event && event.target && event.target.checked);
+    this.set('debug', enabled);
+    // Always emit for direct user toggles so runtime receives both on and off changes.
+    this.fire('debugchanged', {
+      graph: this.graph,
+      enable: enabled,
+    });
+  },
+
   prepareHtmlEditor() {
     if (this.type !== 'noflo-browser') {
       return;
@@ -398,6 +425,7 @@ Polymer({
       environment: env,
       description: this.description,
       icon: this.icon,
+      debug: this.debug,
     });
     this.close();
   },

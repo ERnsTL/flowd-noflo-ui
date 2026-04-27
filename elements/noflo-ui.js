@@ -457,6 +457,16 @@ Polymer({
         this.openProject(project);
       }
     });
+    this.$.search.addEventListener('debugchanged', (event) => {
+      if (!this.ctx.runtime || !this.ctx.runtime.definition || !this.ctx.runtime.definition.id) {
+        return;
+      }
+      this.emitEvent('network:debug', {
+        runtime: this.ctx.runtime.definition.id,
+        graph: event.detail.graph.name || event.detail.graph.properties.id,
+        enable: event.detail.enable,
+      });
+    });
     this.$.search.addEventListener('deleteComponent', (event) => {
       const { project } = this.ctx;
       if (!project || !project.components) {

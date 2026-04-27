@@ -44,6 +44,70 @@ const filterRuntimeEvents = (coll, runtime, filter) => {
   return collection;
 };
 
+const normalizeGraphName = (name) => {
+  if (!name || typeof name !== 'string') {
+    return null;
+  }
+  return collections.unnamespace(name);
+};
+
+const matchesGraph = (graph, graphName) => {
+  const target = normalizeGraphName(graphName);
+  if (!target || !graph) {
+    return false;
+  }
+  const candidates = [];
+  if (graph.name) {
+    candidates.push(normalizeGraphName(graph.name));
+  }
+  if (graph.properties) {
+    if (graph.properties.id) {
+      candidates.push(normalizeGraphName(graph.properties.id));
+    }
+    if (graph.properties.runtimeName) {
+      candidates.push(normalizeGraphName(graph.properties.runtimeName));
+    }
+  }
+  return candidates.includes(target);
+};
+
+const applyDebugToGraphs = (state, graphName, enabled) => {
+  const next = {};
+  if (state.graphs && state.graphs.length) {
+    let changed = false;
+    state.graphs.forEach((graph) => {
+      if (!matchesGraph(graph, graphName)) {
+        return;
+      }
+      if (!graph.properties) {
+        graph.properties = {};
+      }
+      graph.properties.debug = enabled;
+      changed = true;
+    });
+    if (changed) {
+      next.graphs = state.graphs;
+    }
+  }
+  if (state.project && state.project.graphs && state.project.graphs.length) {
+    let changed = false;
+    state.project.graphs.forEach((graph) => {
+      if (!matchesGraph(graph, graphName)) {
+        return;
+      }
+      if (!graph.properties) {
+        graph.properties = {};
+      }
+      graph.properties.debug = enabled;
+      changed = true;
+    });
+    if (changed) {
+      next.project = state.project;
+    }
+  }
+  return next;
+};
+
 exports.getComponent = () => {
   const c = new noflo.Component();
   c.icon = 'cogs';
@@ -98,27 +162,48 @@ exports.getComponent = () => {
       case 'runtime:status': {
         const runtimeStatuses = data.state.runtimeStatuses || {};
         const runtimeStatus = runtimeStatuses[data.payload.runtime];
+        const statusUpdate = data.payload.status || {};
+        const hasOnlineFlag = Object.prototype.hasOwnProperty.call(statusUpdate, 'online');
+        const nextStatus = {
+          ...(runtimeStatus || {}),
+          ...statusUpdate,
+        };
         let events = data.state.runtimeEvents || {};
-        if ((runtimeStatus && runtimeStatus.online)
-          && !data.payload.status.online) {
-          events = addRuntimeEvent(data.state, data.payload.runtime, 'disconnected', data.payload.status);
+        if (hasOnlineFlag
+          && (runtimeStatus && runtimeStatus.online)
+          && (nextStatus.online === false)) {
+          events = addRuntimeEvent(data.state, data.payload.runtime, 'disconnected', nextStatus);
         }
-        if ((!runtimeStatus || !runtimeStatus.online)
-          && data.payload.status.online) {
-          events = addRuntimeEvent(data.state, data.payload.runtime, 'connected', data.payload.status);
+        if (hasOnlineFlag
+          && (!runtimeStatus || !runtimeStatus.online)
+          && (nextStatus.online === true)) {
+          events = addRuntimeEvent(data.state, data.payload.runtime, 'connected', nextStatus);
         }
-        runtimeStatuses[data.payload.runtime] = data.payload.status;
+        runtimeStatuses[data.payload.runtime] = nextStatus;
+        const runtimeExecutions = data.state.runtimeExecutions || {};
+        runtimeExecutions[data.payload.runtime] = runtimeExecutions[data.payload.runtime] || {};
+        // Update execution status with current status fields
+        Object.assign(runtimeExecutions[data.payload.runtime], statusUpdate);
+        if (Object.prototype.hasOwnProperty.call(statusUpdate, 'running')) {
+          runtimeExecutions[data.payload.runtime].label = statusUpdate.running ? 'running' : 'not running';
+        }
         const ctx = {
           runtimeStatuses,
           runtimeEvents: events,
+          runtimeExecutions,
         };
-        if (!data.payload.status.online) {
-          // Disconnected, update execution status too
-          const runtimeExecutions = data.state.runtimeExecutions || {};
-          runtimeExecutions[data.payload.runtime] = data.payload.status;
+        if (Object.prototype.hasOwnProperty.call(statusUpdate, 'debug')
+          && Object.prototype.hasOwnProperty.call(statusUpdate, 'graph')) {
+          Object.assign(ctx, applyDebugToGraphs(
+            data.state,
+            statusUpdate.graph,
+            !!statusUpdate.debug,
+          ));
+        }
+        if (hasOnlineFlag && (nextStatus.online === false)) {
+          // Disconnected, ensure execution status reflects disconnection
           runtimeExecutions[data.payload.runtime].running = false;
           runtimeExecutions[data.payload.runtime].label = 'not running';
-          ctx.runtimeExecutions = runtimeExecutions;
         }
         output.sendDone({ context: ctx });
         return;
