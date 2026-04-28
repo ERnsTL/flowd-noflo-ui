@@ -19,6 +19,7 @@ Polymer({
         background-size: calc(100% - 1px);
         background-position: 0px;
         border-bottom: 1px var(--noflo-ui-border) solid;
+        border-left: 1px var(--noflo-ui-border) solid;
       }
 
       #runtime_icon {

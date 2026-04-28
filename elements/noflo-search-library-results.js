@@ -2,6 +2,10 @@ import { Polymer, html } from '@polymer/polymer/polymer-legacy';
 import './noflo-icon';
 
 Polymer({
+  hostAttributes: {
+    tabindex: '0'
+  },
+
   _template: html`
     <style>
       .search-results-header h1 {
@@ -27,7 +31,7 @@ Polymer({
         margin: 0;
         padding: 0;
         background-color: var(--noflo-ui-background);
-        border-right: 1px solid var(--noflo-ui-border);
+        border-right: none;
       }
 
       .search-results-item {
@@ -79,6 +83,16 @@ Polymer({
         color: var(--noflo-ui-text);
         text-shadow: var(--noflo-ui-background) 0px 1px 1px;
       }
+      .search-results-item.selected {
+        background-color: var(--noflo-ui-text-highlight);
+        color: var(--noflo-ui-background);
+        border: none;
+        outline: none;
+      }
+      .search-results-item.selected h2,
+      .search-results-item.selected p {
+        color: var(--noflo-ui-background);
+      }
     </style>
     <ul class="search-results-list">
       <template is="dom-repeat" items="{{results}}" as="result" index-as="index">
@@ -106,10 +120,20 @@ Polymer({
       value: '',
       notify: true,
     },
+    selectedIndex: {
+      type: Number,
+      value: -1,
+    },
+  },
+
+  attached() {
+    this.addEventListener('keydown', this.handleKeydown.bind(this));
   },
 
   clicked(event) {
-    event.preventDefault();
+    if (event && typeof event.preventDefault === 'function') {
+      event.preventDefault();
+    }
     const index = event.currentTarget.getAttribute('data-index');
     const result = this.results[index];
     if (!result || !result.action) {
@@ -117,5 +141,78 @@ Polymer({
     }
     this.fire('resultclick', result);
     result.action();
+  },
+
+  handleKeydown(event) {
+    if (event.keyCode === 38) { // up
+      event.preventDefault();
+      if (this.selectedIndex > 0) {
+        this.selectedIndex--;
+        this.focusResult(this.selectedIndex);
+      } else {
+        this.clearSelection();
+        this.fire('focusinput');
+        return;
+      }
+    } else if (event.keyCode === 40) { // down
+      event.preventDefault();
+      if (this.selectedIndex < this.results.length - 1) {
+        this.selectedIndex++;
+        this.focusResult(this.selectedIndex);
+      }
+    } else if (event.keyCode === 13) { // enter
+      event.preventDefault();
+      this.activateResult(this.selectedIndex);
+    } else if (event.keyCode === 27) { // escape
+      event.preventDefault();
+      this.fire('clearsearch');
+      return;
+    }
+    this.focus();
+  },
+
+  activateResult(index) {
+    if (index < 0) {
+      return;
+    }
+    const target = this.shadowRoot.querySelector(`[data-index="${index}"]`);
+    if (!target) {
+      return;
+    }
+    this.clicked({
+      preventDefault() {},
+      currentTarget: target,
+    });
+  },
+
+  focusResult(index) {
+    this.selectedIndex = index;
+    const items = this.shadowRoot.querySelectorAll('.search-results-item');
+    items.forEach((item, i) => {
+      if (i === index) {
+        item.classList.add('selected');
+      } else {
+        item.classList.remove('selected');
+      }
+    });
+    const selectedItem = items[index];
+    if (!selectedItem) {
+      return;
+    }
+    if (typeof selectedItem.scrollIntoViewIfNeeded === 'function') {
+      selectedItem.scrollIntoViewIfNeeded();
+      return;
+    }
+    if (typeof selectedItem.scrollIntoView === 'function') {
+      selectedItem.scrollIntoView({ block: 'nearest' });
+    }
+  },
+
+  clearSelection() {
+    this.selectedIndex = -1;
+    const items = this.shadowRoot.querySelectorAll('.search-results-item');
+    items.forEach((item) => {
+      item.classList.remove('selected');
+    });
   },
 });

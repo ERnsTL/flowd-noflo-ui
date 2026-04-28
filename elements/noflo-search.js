@@ -49,21 +49,17 @@ Polymer({
         cursor: pointer;
       }
 
-      :host(.overlay) #breadcrumb {
-        width: calc(72px * 4);
-        display: block;
-      }
       #breadcrumb {
         position: relative;
         overflow: hidden;
-        width: 0px;
+        width: calc(72px * 4);
         height: 71px;
         left: 0px;
         top: 0px;
-        z-index: 1;
+        z-index: auto;
 
         /*transition: width 0.3s ease-in-out;*/
-        display: none;
+        display: block;
         /*box-sizing: border-box;*/
 
         background-color: var(--noflo-ui-background) !important;
@@ -71,15 +67,23 @@ Polymer({
         background-size: calc(100% - 1px);
         background-position: 0px;
         border-bottom: 1px var(--noflo-ui-border) solid;
+        border-right: 1px var(--noflo-ui-border) solid;
 
       }
       #breadcrumb noflo-icon.fa-search {
         position: absolute;
         line-height: 72px;
         right: 54px;
+        width: 36px;
+        text-align: center;
         font-size: 15px;
         color: var(--noflo-ui-text-highlight);
-        cursor: text;
+        cursor: pointer;
+        display: none;
+        z-index: 4;
+      }
+      :host(.overlay) #breadcrumb noflo-icon.fa-search {
+        display: block;
       }
       #breadcrumb #parentlink {
         line-height: 72px;
@@ -100,9 +104,26 @@ Polymer({
         height: 72px;
         font-size: 15px;
         color: var(--noflo-ui-text-highlight);
+        z-index: 4;
       }
       #clear {
-        color: var(--noflo-ui-border-highlight);
+        color: var(--noflo-ui-text-highlight);
+        right: 54px;
+        display: block;
+        box-sizing: border-box;
+      }
+      :host(.overlay) #clear {
+        display: none;
+      }
+      :host(:not(.overlay)) #clear {
+        display: block;
+      }
+      #clear noflo-icon {
+        color: var(--noflo-ui-text-highlight);
+      }
+      #clear:focus {
+        outline: none;
+        box-shadow: none;
       }
       #breadcrumb h1 {
         display: inline-block;
@@ -117,8 +138,14 @@ Polymer({
         padding-left: 18px;
         cursor: pointer;
       }
+      :host(:not(.overlay)) #breadcrumb h1 {
+        display: none;
+      }
       :host(.overlay) #searchinput {
         display: none;
+      }
+      :host(:not(.overlay)) #searchinput {
+        display: inline;
       }
       #searchinput {
         font-family: "SourceCodePro",Helvetica,Arial,sans-serif;
@@ -140,6 +167,14 @@ Polymer({
         border-bottom: 1px var(--noflo-ui-border) solid;
         border-right: 1px var(--noflo-ui-border) solid;
         border-radius: none;
+        z-index: 2;
+        color: var(--noflo-ui-text) !important;
+        -webkit-text-fill-color: var(--noflo-ui-text) !important;
+        text-shadow: none;
+      }
+      #searchinput:focus {
+        outline: none;
+        box-shadow: none;
       }
       #searchinput #speech {
         color: var(--noflo-ui-text-highlight);
@@ -147,6 +182,9 @@ Polymer({
 
       #searchinput.components {
         background-color: var(--noflo-ui-text);
+        color: hsl(0, 0%, 96%) !important;
+        -webkit-text-fill-color: hsl(0, 0%, 96%) !important;
+        caret-color: hsl(0, 0%, 96%);
         transition: background-color 0.3s linear;
       }
       #searchinput.components::-webkit-input-placeholder {
@@ -155,15 +193,18 @@ Polymer({
       }
       #searchinput.processes {
         background-color: hsl(161, 79%, 68%);
+        color: hsl(190, 30%, 12%) !important;
+        -webkit-text-fill-color: hsl(190, 30%, 12%) !important;
+        caret-color: hsl(190, 30%, 12%);
         transition: background-color 0.3s linear;
       }
       #searchinput.processes::-webkit-input-placeholder {
         color: hsl(190, 90%, 45%);
       }
     </style>
-    <div id="breadcrumb" on-click="focus">
+    <div id="breadcrumb">
       <template is="dom-if" if="{{_canSearch(component, readonly)}}">
-      <noflo-icon class="fa-search" icon="search"></noflo-icon>
+      <noflo-icon class="fa-search" icon="search" on-click="focus"></noflo-icon>
       </template>
       <h1 title="Search">
         <template is="dom-if" if="{{_canGoBack(project, graphs, component)}}">
@@ -273,6 +314,10 @@ Polymer({
       notify: true,
       observer: 'searchLibraryResultsChanged',
     },
+    selectedIndex: {
+      type: Number,
+      value: -1,
+    },
   },
 
   readonlyChanged() {
@@ -369,6 +414,7 @@ Polymer({
   attached() {
     PolymerDom(this).classList.add('gpu');
     this.blur();
+    window.addEventListener('mousedown', this.handleDocumentClick.bind(this), true);
   },
 
   focus() {
@@ -405,12 +451,23 @@ Polymer({
   },
 
   clearSearch() {
+    this.hideSearchResults(false);
+    this.search = null;
+    this.blur();
+  },
+
+  hideSearchResults(focusInput = true) {
     if (this.resultsCard) {
       PolymerDom(PolymerDom(this.resultsCard).parentNode).removeChild(this.resultsCard);
       this.resultsCard = null;
     }
-    this.search = null;
-    this.blur();
+    this.clearResults();
+    if (focusInput) {
+      this.$.searchinput.focus();
+      window.requestAnimationFrame(() => {
+        this.$.searchinput.focus();
+      });
+    }
   },
 
   switchSearch(event) {
@@ -427,6 +484,25 @@ Polymer({
         this.set('$.searchinput.placeholder', 'Search processes');
       }
       this.searchChanged();
+    } else if (event.keyCode === 40) { // down arrow
+      event.preventDefault();
+      if (this.resultsCard && this.resultsCard.children[0] && this.resultsCard.children[0].results && this.resultsCard.children[0].results.length > 0) {
+        this.selectedIndex = 0;
+        this.resultsCard.children[0].focus();
+        this.resultsCard.children[0].focusResult(0);
+      }
+    } else if (event.keyCode === 13) { // enter
+      if (this.resultsCard && this.resultsCard.children[0] && typeof this.resultsCard.children[0].activateResult === 'function') {
+        event.preventDefault();
+        this.resultsCard.children[0].activateResult(this.resultsCard.children[0].selectedIndex);
+      }
+    } else if (event.keyCode === 27) { // escape
+      event.preventDefault();
+      if (this.resultsCard) {
+        this.hideSearchResults(true);
+      } else {
+        this.clearSearch();
+      }
     }
     event.stopPropagation();
   },
@@ -471,6 +547,15 @@ Polymer({
     results.addEventListener('resultclick', () => {
       this.clearSearch();
     });
+    results.addEventListener('focusinput', () => {
+      this.$.searchinput.focus();
+      if (this.resultsCard && this.resultsCard.children[0]) {
+        this.resultsCard.children[0].clearSelection();
+      }
+    });
+    results.addEventListener('clearsearch', () => {
+      this.hideSearchResults(true);
+    });
     this.resultsCard = document.createElement('the-card');
     this.set('resultsCard.type', 'noflo-search-library-results');
     PolymerDom(this.resultsCard).appendChild(results);
@@ -504,6 +589,15 @@ Polymer({
     results.results = this.searchGraphResults;
     results.addEventListener('resultclick', () => {
       this.clearSearch();
+    });
+    results.addEventListener('focusinput', () => {
+      this.$.searchinput.focus();
+      if (this.resultsCard && this.resultsCard.children[0]) {
+        this.resultsCard.children[0].clearSelection();
+      }
+    });
+    results.addEventListener('clearsearch', () => {
+      this.hideSearchResults(true);
     });
     this.resultsCard = document.createElement('the-card');
     this.set('resultsCard.type', 'noflo-search-graph-results');
@@ -611,6 +705,24 @@ Polymer({
 
   _isReadOnly(component, graph, readonly) {
     return readonly || (component && component.readonly) || (graph && graph.properties.readonly);
+  },
+
+  handleDocumentClick(event) {
+    if (!this.resultsCard) {
+      return;
+    }
+    const path = typeof event.composedPath === 'function' ? event.composedPath() : [];
+    const target = event.target;
+    const resultsElement = this.resultsCard.querySelector('#results') || this.resultsCard.children[0];
+    const clickedSearchInput = path.indexOf(this.$.searchinput) !== -1
+      || (target && target === this.$.searchinput);
+    const clickedResults = resultsElement
+      && (path.indexOf(resultsElement) !== -1
+      || (target && typeof resultsElement.contains === 'function' && resultsElement.contains(target)));
+    if (clickedSearchInput || clickedResults) {
+      return;
+    }
+    this.hideSearchResults(true);
   },
 
   getName(entity) {

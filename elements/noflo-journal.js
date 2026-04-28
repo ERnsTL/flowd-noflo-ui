@@ -23,6 +23,7 @@ Polymer({
         background-size: calc(100% - 1px);
         background-position: 0px -1px;
         border-top: 1px solid var(--noflo-ui-border);
+        border-left: 1px solid var(--noflo-ui-border);
       }
       #controls #buttons {
         display: flex;
