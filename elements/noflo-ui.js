@@ -31,7 +31,28 @@ Polymer({
       :host {
         display: block;
       }
-
+      :host(.disconnected-ui) noflo-main,
+      :host(.disconnected-ui) the-graph-editor,
+      :host(.disconnected-ui) noflo-library,
+      :host(.disconnected-ui) noflo-context,
+      :host(.disconnected-ui) noflo-journal,
+      :host(.disconnected-ui) noflo-component-editor,
+      :host(.disconnected-ui) noflo-search,
+      :host(.disconnected-ui) noflo-project,
+      :host(.disconnected-ui) noflo-packets {
+        -webkit-filter: blur(5px);
+        -moz-filter: blur(5px);
+        filter: blur(5px);
+        opacity: 0.55;
+        pointer-events: none;
+      }
+      :host(.disconnected-ui) noflo-runtime {
+        -webkit-filter: none;
+        -moz-filter: none;
+        filter: none;
+        opacity: 1;
+        z-index: 8;
+      }
       noflo-main {
         position: fixed;
         top: 0;
@@ -313,8 +334,12 @@ Polymer({
         project: this.ctx.project,
       });
     });
-    this.$.runtime.addEventListener('reconnect', (event) => {
-      this.emitEvent('runtime:reconnect', event.detail);
+    this.$.runtime.addEventListener('connection', (event) => {
+      if (event.detail && event.detail.connected === false) {
+        this.applyDisconnectedState();
+      }
+      // Internal application action name, not an FBP protocol message.
+      this.emitEvent('runtime:connection', event.detail);
     });
     this.$.grapheditor.addEventListener('edges', (event) => {
       this.emitEvent('context:edges', event.detail);
@@ -501,6 +526,39 @@ Polymer({
     this.set('$.search.panel', this.$.context.$.contextsection);
   },
 
+  applyDisconnectedState() {
+    // Reflect disconnect intent in UI immediately, without waiting for
+    // transport-level stale connection detection/status event propagation.
+    if (this.ctx.runtime) {
+      if (!this.ctx.runtime.status) {
+        this.set('ctx.runtime.status', {});
+      }
+      this.set('ctx.runtime.status.online', false);
+      if (!this.ctx.runtime.execution) {
+        this.set('ctx.runtime.execution', {});
+      }
+      this.set('ctx.runtime.execution.running', false);
+    }
+    PolymerDom(this).classList.add('disconnected-ui');
+    this.$.search.blur();
+    this.set('$.packets.showPackets', false);
+    if (this.$.project && this.$.project.$ && this.$.project.$.account) {
+      this.$.project.$.account.open = false;
+    }
+  },
+
+  updateDisconnectedVisualState() {
+    if (!this.ctx.runtime || !this.ctx.runtime.status) {
+      PolymerDom(this).classList.remove('disconnected-ui');
+      return;
+    }
+    if (this.ctx.runtime.status.online) {
+      PolymerDom(this).classList.remove('disconnected-ui');
+      return;
+    }
+    PolymerDom(this).classList.add('disconnected-ui');
+  },
+
   updated(context) {
     if (context.state) {
       switch (context.state) {
@@ -552,6 +610,7 @@ Polymer({
     if (context.searchGraphResult) {
       this.$.search.graphResults(this.ctx.searchGraphResult);
     }
+    this.updateDisconnectedVisualState();
     if (context.syncOperation !== undefined) {
       this.$.project.confirm(context.syncOperation);
       return;

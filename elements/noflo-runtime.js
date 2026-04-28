@@ -103,6 +103,9 @@ Polymer({
         left: 54px;
         top: 36px;
       }
+      #runcontrol h2.disconnected {
+        color: #e70215;
+      }
       #runcontrol button {
         color: var(--noflo-ui-text-highlight);
       }
@@ -129,7 +132,7 @@ Polymer({
     <template is="dom-if" if="{{runtime}}">
       <noflo-icon id="runtime_icon" icon="{{icon}}"></noflo-icon>
       <div id="address" class\$="{{_computeOnlineClass(runtime.status.online)}}">
-        <button title="Connect/Disconnect" on-click="reconnect"><noflo-icon icon="refresh"></noflo-icon></button>
+        <button title="Connect/Disconnect" on-click="toggleConnection"><noflo-icon icon="{{_computeConnectionIcon(runtime.status.online)}}"></noflo-icon></button>
         <h2>{{_produceAddress(runtime)}}</h2>
         <button title="Change Runtime" on-click="clearRuntime" class="clear"><noflo-icon icon="exchange"></noflo-icon></button>
       </div>
@@ -142,8 +145,8 @@ Polymer({
           <template is="dom-if" if="{{!runtime.execution.running}}">
             <button title="Start" class="start" on-click="start"><noflo-icon icon="play"></noflo-icon></button>
           </template>
-          <h2>{{runtime.execution.label}}</h2>
         </template>
+        <h2 class\$="{{_computeExecutionClass(runtime.status.online)}}">{{_computeExecutionLabel(runtime.status.online)}}</h2>
       </div>
     </template>
     <template is="dom-if" if="{{!runtime}}">
@@ -253,12 +256,13 @@ Polymer({
     });
   },
 
-  reconnect(event) {
+  toggleConnection(event) {
     if (event) {
       event.preventDefault();
     }
-    this.fire('reconnect', {
+    this.fire('connection', {
       runtime: this.runtime.definition.id,
+      connected: !this.runtime.status.online,
     });
   },
 
@@ -375,6 +379,27 @@ Polymer({
       return `WebRTC P2P ${runtime.definition.id}`;
     }
     return runtime.definition.address;
+  },
+
+  _computeExecutionLabel(online) {
+    if (!online) {
+      return 'disconnected';
+    }
+    return 'connected';
+  },
+
+  _computeExecutionClass(online) {
+    if (online) {
+      return '';
+    }
+    return 'disconnected';
+  },
+
+  _computeConnectionIcon(online) {
+    if (online) {
+      return 'unlink';
+    }
+    return 'plug';
   },
 
   tokenList(obj) {
