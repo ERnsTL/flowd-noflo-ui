@@ -314,6 +314,17 @@ Polymer({
       }
       this.emitEvent('runtime:clearpackets', clear);
     });
+    this.$.packets.addEventListener('clearpackets', (event) => {
+      if (!this.ctx.runtime || !this.ctx.runtime.definition || !this.ctx.runtime.definition.id) {
+        return;
+      }
+      const clear = {};
+      clear.runtime = this.ctx.runtime.definition.id;
+      if (this.ctx.graph) {
+        clear.graph = this.ctx.graph.name || this.ctx.graph.properties.id;
+      }
+      this.emitEvent('runtime:clearpackets', clear);
+    });
     this.$.runtime.addEventListener('switchRuntime', (event) => {
       this.emitEvent('application:recreatestate', event.detail);
     });

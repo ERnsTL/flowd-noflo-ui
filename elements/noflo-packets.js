@@ -319,6 +319,7 @@ Polymer({
   clearPackets() {
     this.clearingPackets = true;
     this.packets = [];
+    this.fire('clearpackets', {});
     this.clearingPackets = false;
   },
   _computeButtonClass(length) {

@@ -137,16 +137,16 @@ Polymer({
         <input type="text" value="{{description::input}}">
       </label>
       <label>
+        <input type="checkbox" checked="[[debug]]" on-change="onDebugToggle" />
+        <span>Debug mode</span>
+      </label>
+      <label>
         Icon
         <noflo-icon-selector selected="{{icon}}"></noflo-icon-selector>
       </label>
        <label>
          <span>Type</span>
          <noflo-type-selector type="{{type}}" runtimes="{{runtimes}}"></noflo-type-selector>
-       </label>
-       <label>
-         <input type="checkbox" checked="[[debug]]" on-change="onDebugToggle" />
-         <span>Debug mode</span>
        </label>
       </div>
       <div class\$="{{_computeClass3(view)}}">
