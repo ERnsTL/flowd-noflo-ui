@@ -45,6 +45,30 @@ Polymer({
         opacity: 1;
         cursor: n-resize;
       }
+      .trash-button {
+        position: absolute;
+        top: 0px;
+        right: 7px;
+        height: 36px;
+        width: 36px;
+        background: none;
+        border: none;
+        color: var(--noflo-ui-border-highlight);
+        font-family: FontAwesomeSVG;
+        font-size: 17px;
+        opacity: 0.25;
+        cursor: pointer;
+        transition: opacity 0.3s ease-in-out;
+      }
+      .trash-button:hover {
+        opacity: 1;
+      }
+      .trash-button:before {
+        content: '\\f1f8';
+      }
+      .trash-button.has-packets {
+        opacity: 1;
+      }
       the-panel#fixed main {
         height: 288px;
       }
@@ -210,6 +234,7 @@ Polymer({
       the-panel#fixed main .cell .edge .route10 { color: hsl(335,  98%, 46%); }
     </style>
     <the-panel id="fixed" edge="bottom" size="324" handle="36" open={{showPackets}}>
+      <button class$="trash-button {{_computeButtonClass(packets.length)}}" on-click="clearPackets"></button>
       <main id="fixedmain">
       </main>
     </the-panel>
@@ -265,6 +290,10 @@ Polymer({
       observer: 'widthChanged',
     },
     readonly: { notify: true },
+    clearingPackets: {
+      type: Boolean,
+      value: false,
+    },
   },
   attached() {
     window.addEventListener('keyup', (e) => {
@@ -286,6 +315,14 @@ Polymer({
       node = this.pop('nodes');
       node.selected = false;
     }
+  },
+  clearPackets() {
+    this.clearingPackets = true;
+    this.packets = [];
+    this.clearingPackets = false;
+  },
+  _computeButtonClass(length) {
+    return length > 0 ? 'has-packets' : '';
   },
   edgesChanged(newEdges, oldEdges) {
     if (this.edges.length) {
@@ -365,7 +402,7 @@ Polymer({
       // Show packet inspector when first packets arrive
       this.showPackets = true;
     }
-    if ((!newPackets || !newPackets.length) && oldPackets && oldPackets.length) {
+    if ((!newPackets || !newPackets.length) && oldPackets && oldPackets.length && !this.clearingPackets) {
       this.showPackets = false;
     }
   },
