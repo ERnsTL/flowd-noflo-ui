@@ -97,6 +97,11 @@ Polymer({
         right: 0px;
         color: var(--noflo-ui-text-highlight);
       }
+      #address button.persist {
+        position: absolute;
+        right: 36px;
+        color: var(--noflo-ui-text-highlight);
+      }
 
       #runcontrol h2 {
         position: absolute;
@@ -134,6 +139,11 @@ Polymer({
       <div id="address" class\$="{{_computeOnlineClass(runtime.status.online)}}">
         <button title="Connect/Disconnect" on-click="toggleConnection"><noflo-icon icon="{{_computeConnectionIcon(runtime.status.online)}}"></noflo-icon></button>
         <h2>{{_produceAddress(runtime)}}</h2>
+        <template is="dom-if" if="{{runtime.status.online}}">
+          <template is="dom-if" if="{{_hasPersistCapability(runtime)}}">
+            <button title="Persist" class="persist" on-click="persist"><noflo-icon icon="save"></noflo-icon></button>
+          </template>
+        </template>
         <button title="Change Runtime" on-click="clearRuntime" class="clear"><noflo-icon icon="exchange"></noflo-icon></button>
       </div>
       <div id="teststatus" on-click="showTestDetails"></div>
@@ -253,6 +263,18 @@ Polymer({
     this.fire('stop', {
       runtime: this.runtime.definition.id,
       graph: this.graph,
+    });
+  },
+
+  persist(event) {
+    if (event) {
+      event.preventDefault();
+    }
+    if (!this.runtime) {
+      return;
+    }
+    this.fire('persist', {
+      runtime: this.runtime.definition.id,
     });
   },
 
@@ -400,6 +422,13 @@ Polymer({
       return 'unlink';
     }
     return 'plug';
+  },
+
+  _hasPersistCapability(runtime) {
+    if (!runtime || !runtime.definition || !runtime.definition.capabilities) {
+      return false;
+    }
+    return runtime.definition.capabilities.indexOf('network:persist') !== -1;
   },
 
   tokenList(obj) {

@@ -314,7 +314,7 @@ Polymer({
       }
       this.emitEvent('runtime:clearpackets', clear);
     });
-    this.$.packets.addEventListener('clearpackets', (event) => {
+    this.$.packets.addEventListener('clearpackets', () => {
       if (!this.ctx.runtime || !this.ctx.runtime.definition || !this.ctx.runtime.definition.id) {
         return;
       }
@@ -343,6 +343,11 @@ Polymer({
         runtime: event.detail.runtime,
         graph: event.detail.graph,
         project: this.ctx.project,
+      });
+    });
+    this.$.runtime.addEventListener('persist', (event) => {
+      this.emitEvent('runtime:persist', {
+        runtime: event.detail.runtime,
       });
     });
     this.$.runtime.addEventListener('connection', (event) => {

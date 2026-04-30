@@ -1,0 +1,27 @@
+const noflo = require('noflo');
+
+exports.getComponent = () => {
+  const c = new noflo.Component();
+  c.inPorts.add('in',
+    { datatype: 'object' });
+  c.inPorts.add('client',
+    { datatype: 'object' });
+  c.outPorts.add('out',
+    { datatype: 'object' });
+  c.outPorts.add('error',
+    { datatype: 'object' });
+  return c.process((input, output) => {
+    if (!input.hasData('in', 'client')) { return; }
+    const [, client] = input.getData('in', 'client');
+
+    client.connect()
+      .then(() => client.protocol.network.persist({}))
+      .then((status) => output.send({
+        out: {
+          status,
+          runtime: client.definition.id,
+        },
+      }))
+      .then((() => output.done()), (err) => output.done(err));
+  });
+};
