@@ -32,9 +32,11 @@ Polymer({
 
       #teststatus {
         position: absolute;
-        right: 0px;
+        right: 12px;
+        top: 36px;
         z-index: 1;
         width: 100px;
+        text-align: right;
       }
       #teststatus ul {
         margin: 0px;
@@ -80,7 +82,7 @@ Polymer({
 
       #address h2 {
         position: absolute;
-        left: 54px;
+        left: 36px;
         width: 180px;
         top: 0px;
         color: var(--noflo-ui-text);
@@ -95,23 +97,33 @@ Polymer({
       #address button.clear {
         position: absolute;
         right: 0px;
+        top: 0px;
         color: var(--noflo-ui-text-highlight);
       }
       #address button.persist {
         position: absolute;
         right: 36px;
+        top: 0px;
         color: var(--noflo-ui-text-highlight);
+      }
+      #address button:not(.persist):not(.clear) {
+        position: absolute;
+        left: 0px;
+        top: 0px;
       }
 
       #runcontrol h2 {
         position: absolute;
-        left: 54px;
+        left: 36px;
         top: 36px;
       }
       #runcontrol h2.disconnected {
         color: #e70215;
       }
       #runcontrol button {
+        position: absolute;
+        left: 0px;
+        top: 36px;
         color: var(--noflo-ui-text-highlight);
       }
 
