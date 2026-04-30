@@ -122,14 +122,14 @@ Polymer({
         height: 36px;
         border: none;
         font-family: "SourceCodePro",Helvetica,Arial,sans-serif;
-        font-size: 12px;  /* IIP text entry field */
-        padding: 9px 26px 9px 36px;
+        font-size: 12px;  /* IIP text entry field */
+        padding: 9px 26px 9px 10px;
         margin: 0px;
       }
       ul.ports li input[type="checkbox"] {
         height: 18px;
         margin-top: 9px;
-        margin-left: 36px;
+        margin-left: 5px;
         width: 18px;
       }
       ul.ports li input[type="checkbox"]:before {
@@ -138,7 +138,7 @@ Polymer({
         width: 177px;
         height: 36px;
         margin-top: -9px;
-        margin-left: -36px;
+        margin-left: -5px;
         background-color: hsla( 0, 0%, 20%, .2);
         color: hsl( 0, 0%, 75%);
         border-left: 1px solid hsla( 0, 0%, 75%, 0.1);
@@ -147,7 +147,7 @@ Polymer({
       ul.ports li select {
         height: 18px;
         margin-top: 9px;
-        margin-left: 36px;
+        margin-left: 5px;
         max-width: 110px;
       }
 
