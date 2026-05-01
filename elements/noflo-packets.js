@@ -104,14 +104,14 @@ Polymer({
       the-panel#fixed main .header-cell {
         align-items: baseline;
       }
-      the-panel#fixed main .header-cell-text {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        font-size: 10px;
-        font-weight: bold;
-        line-height: 14px;
-        color: var(--noflo-ui-text-highlight);
-      }
+       the-panel#fixed main .header-cell-text {
+         overflow: hidden;
+         text-overflow: ellipsis;
+         font-size: 12px;
+         font-weight: bold;
+         line-height: 14px;
+         color: var(--noflo-ui-text-highlight);
+       }
       the-panel#fixed main .header-cell-arrow {
         width: 0;
         height: 0;
@@ -144,7 +144,7 @@ Polymer({
       the-panel#fixed main .react-fluid-table-row .packet-details dl {
         margin: 0px;
         padding: 7px;
-        font-size: 10px;
+        font-size: 12px;
       }
       the-panel#fixed main .react-fluid-table-row .packet-details dt {
         font-weight: bold;
@@ -166,7 +166,7 @@ Polymer({
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        font-size: 10px;
+        font-size: 12px;
         line-height: 14px;
         color: var(--noflo-ui-text);
       }
